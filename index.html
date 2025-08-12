@@ -51,110 +51,152 @@
     <canvas id="canvas"></canvas>
 
     <script>
-      const canvas = document.getElementById("canvas");
-      const ctx = canvas.getContext("2d");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
 
-      let width, height;
-      function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
+  let width, height;
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  /* ----------- Matrix Rain Background ----------- */
+  const matrixChars = "01";
+  const fontSize = 14;
+  let columns = Math.floor(width / fontSize);
+  const drops = Array(columns).fill(1);
+
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.font = fontSize + "px monospace";
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = matrixChars.charAt(
+        Math.floor(Math.random() * matrixChars.length)
+      );
+      let color;
+      if (i % 3 === 0) color = "#FF9933";
+      else if (i % 3 === 1) color = "#FFFFFF";
+      else color = "#138808";
+      ctx.fillStyle = color;
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if (drops[i] * fontSize > height && Math.random() > 0.975) {
+        drops[i] = 0;
       }
-      window.addEventListener("resize", resize);
-      resize();
+      drops[i]++;
+    }
+  }
 
-      /* ----------- Matrix Rain Background ----------- */
-      const matrixChars = "01";
-      const fontSize = 14;
-      const columns = Math.floor(width / fontSize);
-      const drops = Array(columns).fill(1);
+  /* ----------- Particle Flag ----------- */
+  const particles = [];
+  const gap = 8;
+  const flagWidth = 300;
+  const flagHeight = 180;
+  const startX = width / 2 - flagWidth / 2;
+  const startY = height / 2 - flagHeight / 2;
 
-      function drawMatrix() {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-        ctx.fillRect(0, 0, width, height);
-        ctx.fillStyle = "#0F0";
-        ctx.font = fontSize + "px monospace";
-
-        for (let i = 0; i < drops.length; i++) {
-          const text = matrixChars.charAt(
-            Math.floor(Math.random() * matrixChars.length)
-          );
-          let color;
-          if (i % 3 === 0) color = "#FF9933";
-          else if (i % 3 === 1) color = "#FFFFFF";
-          else color = "#138808";
-          ctx.fillStyle = color;
-          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-          if (drops[i] * fontSize > height && Math.random() > 0.975) {
-            drops[i] = 0;
-          }
-          drops[i]++;
-        }
-      }
-
-      /* ----------- Particle Flag ----------- */
-      const particles = [];
-      const gap = 8;
-      const flagWidth = 300;
-      const flagHeight = 180;
-      const startX = width / 2 - flagWidth / 2;
-      const startY = height / 2 - flagHeight / 2;
-
-      for (let y = 0; y < flagHeight; y += gap) {
-        for (let x = 0; x < flagWidth; x += gap) {
-          let color;
-          if (y < flagHeight / 3) color = "#FF9933";
-          else if (y < (flagHeight / 3) * 2) color = "#FFFFFF";
-          else color = "#138808";
-          particles.push({
-            x: startX + x,
-            y: startY + y,
-            color,
-            ox: startX + x,
-            oy: startY + y,
-            vx: 0,
-            vy: 0,
-          });
-        }
-      }
-
-      canvas.addEventListener("mousemove", (e) => {
-        const mx = e.clientX;
-        const my = e.clientY;
-        particles.forEach((p) => {
-          const dx = p.x - mx;
-          const dy = p.y - my;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 80) {
-            const angle = Math.atan2(dy, dx);
-            const force = (80 - dist) / 4;
-            p.vx += Math.cos(angle) * force;
-            p.vy += Math.sin(angle) * force;
-          }
-        });
+  for (let y = 0; y < flagHeight; y += gap) {
+    for (let x = 0; x < flagWidth; x += gap) {
+      let color;
+      if (y < flagHeight / 3) color = "#FF9933";
+      else if (y < (flagHeight / 3) * 2) color = "#FFFFFF";
+      else color = "#138808";
+      particles.push({
+        x: startX + x,
+        y: startY + y,
+        color,
+        ox: startX + x,
+        oy: startY + y,
+        vx: 0,
+        vy: 0,
       });
+    }
+  }
 
-      function drawParticles() {
-        particles.forEach((p) => {
-          p.vx += (p.ox - p.x) * 0.02;
-          p.vy += (p.oy - p.y) * 0.02;
-          p.vx *= 0.9;
-          p.vy *= 0.9;
-          p.x += p.vx;
-          p.y += p.vy;
+  /* ----------- Ashoka Chakra ----------- */
+ function drawAshokaChakra() {
+  const chakraX = startX + flagWidth / 2;
+  const chakraY = startY + flagHeight / 2;
+  const radius = 20;
 
-          ctx.fillStyle = p.color;
-          ctx.fillRect(p.x, p.y, 3, 3);
-        });
+  // White background circle (makes it stand out)
+  ctx.beginPath();
+  ctx.arc(chakraX, chakraY, radius + 3, 0, Math.PI * 2); // slightly bigger than chakra
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+
+  // Outer blue circle
+  ctx.beginPath();
+  ctx.arc(chakraX, chakraY, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = "#000080";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 24 spokes
+  for (let i = 0; i < 24; i++) {
+    const angle = (i * Math.PI * 2) / 24;
+    ctx.beginPath();
+    ctx.moveTo(chakraX, chakraY);
+    ctx.lineTo(
+      chakraX + radius * Math.cos(angle),
+      chakraY + radius * Math.sin(angle)
+    );
+    ctx.strokeStyle = "#000080";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Small inner circle (hub)
+  ctx.beginPath();
+  ctx.arc(chakraX, chakraY, 2, 0, Math.PI * 2);
+  ctx.fillStyle = "#000080";
+  ctx.fill();
+}
+
+  canvas.addEventListener("mousemove", (e) => {
+    const mx = e.clientX;
+    const my = e.clientY;
+    particles.forEach((p) => {
+      const dx = p.x - mx;
+      const dy = p.y - my;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 80) {
+        const angle = Math.atan2(dy, dx);
+        const force = (80 - dist) / 4;
+        p.vx += Math.cos(angle) * force;
+        p.vy += Math.sin(angle) * force;
       }
+    });
+  });
 
-      /* ----------- Animation Loop ----------- */
-      function animate() {
-        drawMatrix();
-        drawParticles();
-        requestAnimationFrame(animate);
-      }
-      animate();
-    </script>
+  function drawParticles() {
+    particles.forEach((p) => {
+      p.vx += (p.ox - p.x) * 0.02;
+      p.vy += (p.oy - p.y) * 0.02;
+      p.vx *= 0.9;
+      p.vy *= 0.9;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, 3, 3);
+    });
+  }
+
+  /* ----------- Animation Loop ----------- */
+  function animate() {
+    drawMatrix();
+    drawParticles();
+    drawAshokaChakra(); // Draw on top
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+
+
   </body>
 </html>
