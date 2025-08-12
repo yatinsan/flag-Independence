@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech Independence Day</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        color: white;
+        font-family: monospace;
+      }
+
+      /* Glitchy Title */
+      .title {
+        position: absolute;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 2em;
+        letter-spacing: 2px;
+        color: #fff;
+        text-shadow: 0 0 5px #ff9933, 0 0 10px #138808;
+        animation: glitch 2s infinite;
+      }
+
+      @keyframes glitch {
+        0% {
+          text-shadow: 0 0 5px #ff9933, 0 0 10px #138808;
+        }
+        50% {
+          text-shadow: 2px 0 #ff9933, -2px 0 #138808;
+        }
+        100% {
+          text-shadow: 0 0 5px #ff9933, 0 0 10px #138808;
+        }
+      }
+
+      /* Canvas fills the screen */
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="title">Happy Independence Day 🇮🇳</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      let width, height;
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      /* ----------- Matrix Rain Background ----------- */
+      const matrixChars = "01";
+      const fontSize = 14;
+      const columns = Math.floor(width / fontSize);
+      const drops = Array(columns).fill(1);
+
+      function drawMatrix() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "#0F0";
+        ctx.font = fontSize + "px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = matrixChars.charAt(
+            Math.floor(Math.random() * matrixChars.length)
+          );
+          let color;
+          if (i % 3 === 0) color = "#FF9933";
+          else if (i % 3 === 1) color = "#FFFFFF";
+          else color = "#138808";
+          ctx.fillStyle = color;
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+          if (drops[i] * fontSize > height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+
+      /* ----------- Particle Flag ----------- */
+      const particles = [];
+      const gap = 8;
+      const flagWidth = 300;
+      const flagHeight = 180;
+      const startX = width / 2 - flagWidth / 2;
+      const startY = height / 2 - flagHeight / 2;
+
+      for (let y = 0; y < flagHeight; y += gap) {
+        for (let x = 0; x < flagWidth; x += gap) {
+          let color;
+          if (y < flagHeight / 3) color = "#FF9933";
+          else if (y < (flagHeight / 3) * 2) color = "#FFFFFF";
+          else color = "#138808";
+          particles.push({
+            x: startX + x,
+            y: startY + y,
+            color,
+            ox: startX + x,
+            oy: startY + y,
+            vx: 0,
+            vy: 0,
+          });
+        }
+      }
+
+      canvas.addEventListener("mousemove", (e) => {
+        const mx = e.clientX;
+        const my = e.clientY;
+        particles.forEach((p) => {
+          const dx = p.x - mx;
+          const dy = p.y - my;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 80) {
+            const angle = Math.atan2(dy, dx);
+            const force = (80 - dist) / 4;
+            p.vx += Math.cos(angle) * force;
+            p.vy += Math.sin(angle) * force;
+          }
+        });
+      });
+
+      function drawParticles() {
+        particles.forEach((p) => {
+          p.vx += (p.ox - p.x) * 0.02;
+          p.vy += (p.oy - p.y) * 0.02;
+          p.vx *= 0.9;
+          p.vy *= 0.9;
+          p.x += p.vx;
+          p.y += p.vy;
+
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x, p.y, 3, 3);
+        });
+      }
+
+      /* ----------- Animation Loop ----------- */
+      function animate() {
+        drawMatrix();
+        drawParticles();
+        requestAnimationFrame(animate);
+      }
+      animate();
+    </script>
+  </body>
+</html>
